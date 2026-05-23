@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+data/
+*.pth
+# Keep the figure so README renders on GitHub
+results/
+!results/material_maps.png
+!results/cmp_*.png
+!results/loss.png
