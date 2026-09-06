@@ -1,4 +1,4 @@
-# Differentiable PBR — Inverse Material Optimisation
+# Differentiable PBR: Inverse Material Optimisation
 
 A **pure-PyTorch** differentiable physically-based renderer that recovers
 spatially-varying material maps (albedo, normal, roughness, metallic) from
@@ -195,7 +195,7 @@ python train.py --steps 2000                 # → results/
 python visualize.py                          # → results/material_maps.png
 ```
 
-Works on CPU, CUDA, and Apple MPS — the device is auto-detected.
+Works on CPU, CUDA, and Apple MPS: the device is auto-detected.
 
 ---
 
@@ -204,15 +204,15 @@ Works on CPU, CUDA, and Apple MPS — the device is auto-detected.
 ```
 diff-pbr/
 ├── pbr/
-│   ├── mesh.py         — UV sphere with analytic TBN frames
-│   ├── camera.py       — pinhole camera, projection matrices, lights
-│   ├── rasterize.py    — numpy software rasterizer → geometry buffers
-│   ├── brdf.py         — Cook-Torrance BRDF (GGX + Schlick + Smith)
-│   ├── material.py     — MaterialMaps: 4 learnable log-space textures
-│   └── render.py       — differentiable shading pass
-├── generate_reference.py  — render ground-truth images from known material
-├── train.py               — inverse optimisation loop (Adam + cosine LR)
-├── visualize.py           — save recovered material map PNGs
+│   ├── mesh.py         : UV sphere with analytic TBN frames
+│   ├── camera.py       : pinhole camera, projection matrices, lights
+│   ├── rasterize.py    : numpy software rasterizer, produces geometry buffers
+│   ├── brdf.py         : Cook-Torrance BRDF (GGX + Schlick + Smith)
+│   ├── material.py     : MaterialMaps, 4 learnable log-space textures
+│   └── render.py       : differentiable shading pass
+├── generate_reference.py  : render ground-truth images from known material
+├── train.py               : inverse optimisation loop (Adam + cosine LR)
+├── visualize.py           : save recovered material map PNGs
 └── requirements.txt
 ```
 
@@ -233,5 +233,5 @@ diff-pbr/
 
 4. **Munkberg J. et al.** (2022).
    "Extracting Triangular 3D Models, Materials, and Lighting From Images."
-   *CVPR 2022*.  *(nvdiffrast paper — our implementation follows the same
+   *CVPR 2022*.  *(nvdiffrast paper; our implementation follows the same
    separation of rasterisation and shading.)*
