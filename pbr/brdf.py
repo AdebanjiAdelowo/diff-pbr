@@ -4,7 +4,7 @@ Model
 -----
     f_r = f_diffuse + f_specular
 
-    f_diffuse  = (1 − metallic) · albedo / π
+    f_diffuse  = (1 − F) · (1 − metallic) · albedo / π
     f_specular = D(h) · F(v,h) · G(l,v,h) / (4 · (n·l) · (n·v))
 
 Components

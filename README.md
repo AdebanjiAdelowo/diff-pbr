@@ -134,11 +134,11 @@ Every operation from texture sampling onward is differentiable:
 
 | Operation            | Differentiable tool                         |
 |----------------------|---------------------------------------------|
-| Texture sampling     | `F.grid_sample` (bilinear)                  |
+| Texture sampling     | hand-rolled bilinear via `torch.gather`     |
 | Albedo → linear RGB  | `torch.sigmoid`                             |
 | Roughness, metallic  | `torch.sigmoid`                             |
 | Normal map → world   | `F.normalize` + TBN matrix multiply         |
-| GGX NDF              | element-wise arithmetic, `torch.sqrt`       |
+| GGX NDF              | element-wise arithmetic                     |
 | Schlick Fresnel       | exponentiation `**5`                       |
 | Smith G              | `torch.sqrt` + arithmetic                   |
 | Photometric loss     | `F.mse_loss`                                |
@@ -146,6 +146,11 @@ Every operation from texture sampling onward is differentiable:
 Parameters are stored in **unconstrained logit/log space** and passed
 through sigmoid/tanh at sample time, so gradients flow freely without
 clamping artefacts.
+
+Texture sampling deliberately avoids `F.grid_sample`: its backward pass is
+not implemented on the PyTorch MPS backend, so `pbr/material.py` implements
+bilinear interpolation manually with `torch.gather`, which is
+differentiable and runs identically on CPU, CUDA, and MPS.
 
 ---
 
@@ -228,10 +233,10 @@ diff-pbr/
    "Real Shading in Unreal Engine 4."
    *SIGGRAPH 2013 Course: Physically Based Shading in Theory and Practice*.
 
-3. **Ngo T. et al.** (2021).
+3. **Kato H., Beker D., Morariu M., Ando T., Matsuoka T., Kehl W., Gaidon A.** (2020).
    "Differentiable Rendering: A Survey." *arXiv:2006.12057*.
 
 4. **Munkberg J. et al.** (2022).
    "Extracting Triangular 3D Models, Materials, and Lighting From Images."
-   *CVPR 2022*.  *(nvdiffrast paper; our implementation follows the same
-   separation of rasterisation and shading.)*
+   *CVPR 2022*.  *(the nvdiffrec paper, not nvdiffrast; our implementation
+   follows the same separation of rasterisation and shading.)*

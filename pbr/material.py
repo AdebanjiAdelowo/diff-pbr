@@ -8,8 +8,12 @@ unconstrained gradient flow:
     roughness   (1-channel)  → sigmoid → [0,1]    (perceptual roughness)
     metallic    (1-channel)  → sigmoid → [0,1]    (metalness)
 
-Texture sampling uses F.grid_sample with bilinear interpolation.
-UV coords expected in [0,1]; internally remapped to [-1,1] for grid_sample.
+Texture sampling uses a hand-rolled bilinear interpolation built on
+torch.gather (see MaterialMaps._sample), not F.grid_sample: grid_sample's
+backward pass is not implemented on the PyTorch MPS backend, so this
+gather-based sampler is used instead to keep gradients working on CPU,
+CUDA, and MPS alike. UV coords are expected in [0,1] and are mapped
+directly to pixel coordinates [0, W-1] / [0, H-1].
 
 The normal delta is converted to a full tangent-space normal via:
     n_ts = normalise(Δx, Δy, 1.0)
