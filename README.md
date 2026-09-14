@@ -20,8 +20,9 @@ No external rasterization libraries (no nvdiffrast, no pytorch3d) are needed.
 4. [Gradient flow through the renderer](#4-gradient-flow-through-the-renderer)
 5. [Implementation overview](#5-implementation-overview)
 6. [Quick start](#6-quick-start)
-7. [Project structure](#7-project-structure)
-8. [References](#8-references)
+7. [Results](#7-results)
+8. [Project structure](#8-project-structure)
+9. [References](#9-references)
 
 ---
 
@@ -191,9 +192,10 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # 1. Generate ground-truth reference images
-python generate_reference.py                 # → data/reference/
+python generate_reference.py                 # → data/reference/ (8 views)
 
-# 2. Run inverse optimisation
+# 2. Run inverse optimisation (2 of the 8 views are held out of
+#    optimisation entirely and used only to report generalisation MSE)
 python train.py --steps 2000                 # → results/
 
 # 3. Visualise recovered material maps
@@ -204,7 +206,35 @@ Works on CPU, CUDA, and Apple MPS: the device is auto-detected.
 
 ---
 
-## 7. Project structure
+## 7. Results
+
+`generate_reference.py` renders 8 views of the ground-truth material. Of
+these, **views 6 and 7 are held out of optimisation entirely** (see
+`train.py`'s `--holdout` flag, default `"6,7"`): each training step draws
+a random view only from the remaining 6, so the held-out views'
+pixels and gradients never reach the optimiser. After optimisation
+finishes, `train.py` renders all 8 views once more (`eval()`, `no_grad`)
+and reports two separate numbers, written to `results/metrics.json`:
+
+| Metric                              | Views   | MSE        | PSNR     |
+|--------------------------------------|---------|------------|----------|
+| Training-view (in-sample) MSE        | 0-5 (6) | 1.82 × 10⁻⁶ | 57.4 dB |
+| Held-out-view MSE                    | 6, 7 (2)| 1.02 × 10⁻⁵ | 49.9 dB |
+
+The held-out MSE is about 5.6× the training MSE. This gap is the expected,
+honest signature of fitting: the training-view number alone (the
+in-sample ~10⁻⁶ MSE regime this project previously reported without a
+train/held-out distinction) reflects successful reconstruction of a
+fully-observed capture, not generalisation to an unseen viewpoint. With
+only 6 training views of a smoothly-varying material on a convex sphere,
+some gap on unseen viewpoints is expected; both numbers above come from a
+single un-tuned run with the optimiser's default settings (Adam,
+`lr=2e-2`, 2000 steps, cosine schedule) and are reproduced by
+`python generate_reference.py && python train.py`.
+
+---
+
+## 8. Project structure
 
 ```
 diff-pbr/
@@ -216,14 +246,15 @@ diff-pbr/
 │   ├── material.py     : MaterialMaps, 4 learnable log-space textures
 │   └── render.py       : differentiable shading pass
 ├── generate_reference.py  : render ground-truth images from known material
-├── train.py               : inverse optimisation loop (Adam + cosine LR)
+├── train.py               : train/held-out optimisation loop (Adam + cosine LR),
+│                             writes results/metrics.json with both MSEs
 ├── visualize.py           : save recovered material map PNGs
 └── requirements.txt
 ```
 
 ---
 
-## 8. References
+## 9. References
 
 1. **Walter B., Marschner S.R., Li H., Torrance K.E.** (2007).
    "Microfacet Models for Refraction through Rough Surfaces."
